@@ -27,6 +27,10 @@ class _RegisterState extends State<Register> {
   static var dailyProtien;
   static var dailyCarbs;
   static var dailyFat;
+  static var calsLeft;
+  static var protienLeft;
+  static var carbsLeft;
+  static var fatLeft;
   bool _validate = false;
 
     final usernameCon = new TextEditingController();
@@ -298,7 +302,9 @@ class _RegisterState extends State<Register> {
                               dailyCals =
                                   ((10 * weight) + (6.25 * height) - (5 * age) +
                                       5) * _dailyActivity;
+                              calsLeft = dailyCals;
                               print("cals is $dailyCals");
+                              print("cals left is $calsLeft");
                               print("weight is $weight");
                               print("height is $height");
                               print("age is $age");
@@ -309,7 +315,9 @@ class _RegisterState extends State<Register> {
                               dailyCals =
                                   10 * weight + 6.25 * height - 5 * age -
                                       161 * _dailyActivity;
+                              calsLeft = dailyCals;
                               print("cals is $dailyCals");
+                              print("cals left is $calsLeft");
                               print("weight is $weight");
                               print("weight is $height");
                               print("age is $age");
@@ -318,27 +326,39 @@ class _RegisterState extends State<Register> {
 
                             if (goals > 0) {
                               dailyCals = dailyCals + dailyCals * 0.15;
+                              calsLeft = dailyCals;
                               print("cals is $dailyCals");
+                              print("cals left is $calsLeft");
                             }
                             if (goals < 0) {
                               dailyCals = dailyCals - (dailyCals * 0.15);
+                              calsLeft = dailyCals;
                               print("cals is $dailyCals");
+                              print("cals left is $calsLeft");
                             }
 
                             dailyCals = dailyCals.round();
+                            calsLeft = calsLeft.round();
 
                             //2.2 grams per kilo
                             dailyProtien = weight * 2.2;
                             dailyProtien = dailyProtien.round();
+                            protienLeft = dailyProtien;
                             print("Protien : $dailyProtien");
+                            print("Protien Left : $protienLeft");
+
 
                             // 30% of total cals
                             dailyFat = weight * 0.88;
                             dailyFat= dailyFat.round();
+                            fatLeft = dailyFat;
+                            print("Fat Left: $fatLeft");
                             print("Fat : $dailyFat");
 
                             dailyCarbs = (dailyCals - ((dailyFat * 9)+(dailyProtien * 4)))/4;
                             dailyCarbs = dailyCarbs.round();
+                            carbsLeft = dailyCarbs;
+                            print("Carbs Left : $carbsLeft");
                             print("Carbs : $dailyCarbs");
 
                           });
@@ -360,7 +380,11 @@ class _RegisterState extends State<Register> {
                               DatabaseHelper.dailyKcal: '$dailyCals',
                               DatabaseHelper.dailyProtien: '$dailyProtien',
                               DatabaseHelper.dailyCarbs: '$dailyCarbs',
-                              DatabaseHelper.dailyFat: '$dailyFat'
+                              DatabaseHelper.dailyFat: '$dailyFat',
+                              DatabaseHelper.calsLeft: '$calsLeft',
+                              DatabaseHelper.protienLeft: '$protienLeft',
+                              DatabaseHelper.carbsLeft: '$carbsLeft',
+                              DatabaseHelper.fatLeft: '$fatLeft'
                             });
                             print('the inserted id is $i');
                             _validate = true;

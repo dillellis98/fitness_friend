@@ -82,11 +82,12 @@ class _LoginPageState extends State<LoginPage> {
                       });
                       int queryLogin = await DatabaseHelper.instance.checkLogin(username, password);
                       int uid = await DatabaseHelper.instance.getUserID(username);
+                      print("Login page has $uid");
 
                       if (queryLogin == 1) {
-//                        var pref = await SharedPreferences.getInstance();
-//                        pref.setInt('UID', uid);
-//                        print("user id is $uid");
+                        var pref = await SharedPreferences.getInstance();
+                        pref.setInt('UID', uid);
+                        print("user id is $uid");
                         Navigator.push(context,
                             MaterialPageRoute(builder: (context) =>
                                 MyNavBar(uid)));

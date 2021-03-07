@@ -15,6 +15,11 @@ class User {
   var dailyProtien;
   var dailyCarbs;
   var dailyFat;
+  var calsLeft;
+  var protienLeft;
+  var carbsLeft;
+  var fatLeft;
+
 
   User({
     this.userID,
@@ -30,6 +35,11 @@ class User {
     this.dailyProtien,
     this.dailyCarbs,
     this.dailyFat,
+    this.calsLeft,
+    this.protienLeft,
+    this.carbsLeft,
+    this.fatLeft
+
 
   });
 
@@ -49,6 +59,10 @@ class User {
       DatabaseHelper.dailyProtien: dailyProtien,
       DatabaseHelper.dailyCarbs: dailyCarbs,
       DatabaseHelper.dailyFat: dailyFat,
+      DatabaseHelper.calsLeft: calsLeft,
+      DatabaseHelper.protienLeft: protienLeft,
+      DatabaseHelper.carbsLeft: carbsLeft,
+      DatabaseHelper.fatLeft: fatLeft,
     };
 
     if (userID != null) {
@@ -72,6 +86,10 @@ class User {
     dailyProtien = map[DatabaseHelper.dailyProtien];
     dailyCarbs = map[DatabaseHelper.dailyCarbs];
     dailyFat = map[DatabaseHelper.dailyFat];
+    calsLeft = map[DatabaseHelper.calsLeft];
+    protienLeft = map[DatabaseHelper.protienLeft];
+    carbsLeft = map[DatabaseHelper.carbsLeft];
+    fatLeft = map[DatabaseHelper.fatLeft];
 
   }
 }

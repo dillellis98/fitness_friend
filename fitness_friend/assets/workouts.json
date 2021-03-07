@@ -1,0 +1,20 @@
+[
+  {
+    "routineID": 1,
+    "routineName": "Push Workout",
+    "description": "Works the Chest",
+    "imagePath": "assets/pushWorkout.jpg"
+  },
+  {
+    "routineID": 2,
+    "routineName": "Pull Workout",
+    "description": "Works the Back and Biceps",
+    "imagePath": "assets/pullWorkout.jpg"
+  },
+  {
+    "routineID": 3,
+    "routineName": "Leg Workout",
+    "description": "Works all the muscles of the Legs",
+    "imagePath": "assets/legWorkout.jpg"
+  }
+]

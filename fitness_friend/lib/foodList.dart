@@ -19,23 +19,11 @@ class FoodList extends StatefulWidget {
 }
 
 class _FoodListState extends State<FoodList> {
-//  Future<int> getCurrentUID(String key) async {
-//    var pref = await SharedPreferences.getInstance();
-//    int number = pref.getInt(key);
-//    return number;
-//  }
-//
-//
-//  int UID;
+
 
   @override
   void initState() {
     super.initState();
-//    getCurrentUID('UID').then((value) =>
-//    UID = value
-//    );
-//
-//    final currentUID = UID;
 
     DatabaseHelper.instance.getFoods(widget.uid).then(
       (foodList) {
@@ -49,7 +37,7 @@ class _FoodListState extends State<FoodList> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(food.name),
-        content: Text("ID ${food.fid}"),
+        content: Text("ID ${widget.uid}"),
         actions: <Widget>[
           FlatButton(
             onPressed: () => Navigator.pushReplacement(
@@ -62,7 +50,7 @@ class _FoodListState extends State<FoodList> {
           ),
           FlatButton(
             onPressed: () =>
-                DatabaseHelper.instance.foodDelete(food.fid).then((_) {
+                DatabaseHelper.instance.foodDelete(food).then((_) {
               BlocProvider.of<FoodBloc>(context).add(
                 DeleteFood(index),
               );

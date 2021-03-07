@@ -30,8 +30,6 @@ class FoodLog extends StatefulWidget {
 }
 
 class _FoodLogState extends State<FoodLog> {
-
-
   String barcodeResult;
   String foodName;
   double foodCals;
@@ -39,42 +37,32 @@ class _FoodLogState extends State<FoodLog> {
   double foodFat;
   double foodCarbs;
   double servingSize;
+
   var userCarbs;
+  var userCarbsLeft;
   var userCals;
   var userCalsLeft;
   var userProtein;
+  var userProteinLeft;
   var userFat;
-  double progress;
+  var userFatLeft;
 
+  var calProgress;
+  var protienProgress;
+  var carbsProgress;
+  var fatProgress;
+  bool isLoading = true;
 
-  getProgress(){
-    progress = userCals ~/ userCalsLeft;
-    print("progress");
-    return progress;
-  }
-
-
-  getCarbs() async {
+  void getNutrients() async {
     userCarbs = await DatabaseHelper.instance.getUserCarbs(widget.uid);
-  }
-
-  getCals() async {
+    userCarbsLeft = await DatabaseHelper.instance.getCarbsLeft(widget.uid);
     userCals = await DatabaseHelper.instance.getUserCals(widget.uid);
-  }
-
-  getCalsLeft() async {
-    userCalsLeft = await DatabaseHelper.instance.getUserCals(widget.uid);
-  }
-
-
-  getProtein() async {
+    userCalsLeft = await DatabaseHelper.instance.getCalsLeft(widget.uid);
     userProtein = await DatabaseHelper.instance.getUserProtein(widget.uid);
-  }
-
-  getFat() async {
+    userProteinLeft = await DatabaseHelper.instance.getProtienLeft(widget.uid);
     userFat = await DatabaseHelper.instance.getUserFat(widget.uid);
+    userFatLeft = await DatabaseHelper.instance.getFatLeft(widget.uid);
   }
-
 
   Future _scanBarcode() async {
     try {
@@ -123,7 +111,6 @@ class _FoodLogState extends State<FoodLog> {
       print(
           "$foodName , $foodCals , $foodProtien , $foodFat , $foodCarbs , $servingSize");
 
-
       return result.product;
     } else {
       throw new Exception(
@@ -134,46 +121,43 @@ class _FoodLogState extends State<FoodLog> {
   ConfirmFoodDialog() {
     showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: Text("Is this the correct food?"),
-            content:
-            Text("ID $foodName"),
-            actions: <Widget>[
-              FlatButton(
-                onPressed: () {
-                  barcodeFood();
-                  Navigator.pop(context);
-                },
-                child: Text("Confirm"),
-              ),
-              FlatButton(
-                onPressed: () {
-                  Food foodToEdit = Food(
-                    name: foodName,
-                    calories: foodCals,
-                    protiens: foodProtien,
-                    carbohydrates: foodCarbs,
-                    fats: foodFat,
-                    servingSize: servingSize,
-                    userFK: widget.uid,
-                  );
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          editFoodForm(foodToEdit: foodToEdit),
-                    ),
-                  );
-                },
-                child: Text("Edit"),
-              ),
-              FlatButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Cancel"),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text("Is this the correct food?"),
+        content: Text("ID $foodName"),
+        actions: <Widget>[
+          FlatButton(
+            onPressed: () {
+              barcodeFood();
+              Navigator.pop(context);
+            },
+            child: Text("Confirm"),
           ),
+          FlatButton(
+            onPressed: () {
+              Food foodToEdit = Food(
+                name: foodName,
+                calories: foodCals,
+                protiens: foodProtien,
+                carbohydrates: foodCarbs,
+                fats: foodFat,
+                servingSize: servingSize,
+                userFK: widget.uid,
+              );
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => editFoodForm(foodToEdit: foodToEdit),
+                ),
+              );
+            },
+            child: Text("Edit"),
+          ),
+          FlatButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -189,52 +173,46 @@ class _FoodLogState extends State<FoodLog> {
     );
 
     DatabaseHelper.instance.foodInsert(food).then(
-          (storedFood) =>
-          BlocProvider.of<FoodBloc>(context).add(
+          (storedFood) => BlocProvider.of<FoodBloc>(context).add(
             AddFood(storedFood),
           ),
-    );
+        );
   }
-
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      getCarbs();
-      getCals();
-      getCalsLeft();
-      getProtein();
-      getFat();
+    asyncMethod().then((result) {
+      calProgress = (userCalsLeft / userCals);
+      protienProgress = (userProteinLeft / userProtein);
+      carbsProgress = (userCarbsLeft / userCarbs);
+      fatProgress = (userFatLeft / userFat);
+      setState(() {
+        isLoading = false;
+    });
     });
   }
 
-
+  asyncMethod() async {
+    await getNutrients();
+  }
 
   Widget build(BuildContext context) {
-    final height = MediaQuery
-        .of(context)
-        .size
-        .height;
-    final width = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     final today = DateTime.now();
 
-    if (userCarbs == null) {
+    if (isLoading == true) {
       return Scaffold(
-        backgroundColor: Color(0xFFE9E9E9),
-        body: Center(
-              child: Image.asset(
-                'assets/logo.png',
-                width: height * 0.3,
-                height: height * 0.3,
-              ),
-        )
-      );
+          backgroundColor: Color(0xFFE9E9E9),
+          body: Center(
+            child: Image.asset(
+              'assets/logo.png',
+              width: height * 0.3,
+              height: height * 0.3,
+            ),
+          ));
     }
-
 
     return Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
@@ -252,14 +230,13 @@ class _FoodLogState extends State<FoodLog> {
               child: Container(
                 color: Colors.white,
                 padding:
-                EdgeInsets.only(top: 30, left: 32, right: 16, bottom: 10),
+                    EdgeInsets.only(top: 30, left: 32, right: 16, bottom: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     ListTile(
                       title: Text(
-                        "${DateFormat("EEEE").format(today)}, ${DateFormat(
-                            "d MMMM").format(today)}",
+                        "${DateFormat("EEEE").format(today)}, ${DateFormat("d MMMM").format(today)}",
                         style: TextStyle(
                           fontSize: 14,
                         ),
@@ -281,8 +258,8 @@ class _FoodLogState extends State<FoodLog> {
                         _RadialProgress(
                           width: width * 0.3,
                           height: width * 0.3,
-                          progress: 0.5,
-                          kcal: userCals,
+                          progress: calProgress,
+                          kcal: userCalsLeft,
                         ),
                         SizedBox(
                           width: 15,
@@ -294,27 +271,27 @@ class _FoodLogState extends State<FoodLog> {
                           children: <Widget>[
                             _MacroProgress(
                                 macro: "Protien",
-                                progress: 0.3,
+                                progress: protienProgress,
                                 progressColor: Color(0xff68D065),
-                                amountLeft: userProtein,
+                                amountLeft: userProteinLeft,
                                 width: width * 0.3),
                             SizedBox(
                               height: 10,
                             ),
                             _MacroProgress(
                                 macro: "Carbs",
-                                progress: 0.6,
+                                progress: carbsProgress,
                                 progressColor: Color(0xff68D065),
-                                amountLeft: userCarbs,
+                                amountLeft: userCarbsLeft,
                                 width: width * 0.3),
                             SizedBox(
                               height: 10,
                             ),
                             _MacroProgress(
                                 macro: "Fat",
-                                progress: 0.1,
+                                progress: fatProgress,
                                 progressColor: Color(0xff68D065),
-                                amountLeft: userFat,
+                                amountLeft: userFatLeft,
                                 width: width * 0.3),
                           ],
                         )
@@ -383,11 +360,10 @@ class _FoodLogState extends State<FoodLog> {
                             icon: Icon(FontAwesomeIcons.camera),
                             onPressed: () {
                               _scanBarcode().then((value) =>
-                                  getProduct(barcodeResult).then((value) =>
-                                      ConfirmFoodDialog()));
-                            }
-                        ),
-
+                                  getProduct(barcodeResult).then((value) {
+                                    ConfirmFoodDialog();
+                                  }));
+                            }),
                         SizedBox(
                           height: height * 0.04,
                         ),
@@ -419,21 +395,20 @@ class _FoodLogState extends State<FoodLog> {
   }
 }
 
-
 class _MacroProgress extends StatelessWidget {
   final String macro;
   final amountLeft;
-  final double progress;
-  final double width;
+  final progress;
+  final width;
   final Color progressColor;
 
-
-  const _MacroProgress({Key key,
-    this.macro,
-    this.amountLeft,
-    this.progress,
-    this.progressColor,
-    this.width})
+  const _MacroProgress(
+      {Key key,
+      this.macro,
+      this.amountLeft,
+      this.progress,
+      this.progressColor,
+      this.width})
       : super(key: key);
 
   @override
@@ -485,7 +460,8 @@ class _RadialProgress extends StatelessWidget {
   final height, width, progress;
   final kcal;
 
-  const _RadialProgress({Key key, this.height, this.width, this.progress, this.kcal})
+  const _RadialProgress(
+      {Key key, this.height, this.width, this.progress, this.kcal})
       : super(key: key);
 
   @override

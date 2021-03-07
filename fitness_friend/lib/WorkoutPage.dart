@@ -1,9 +1,10 @@
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:fitnessfriend/model/Routine.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+
+import 'database_helper.dart';
 
 class WorkoutPage extends StatefulWidget {
   @override
@@ -11,11 +12,44 @@ class WorkoutPage extends StatefulWidget {
 }
 
 class _WorkoutPageState extends State<WorkoutPage> {
+  List<Routine> routineList;
+  bool isLoading = true;
+
+  getRoutineList() async {
+    routineList = await DatabaseHelper.instance.getRoutine();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    asyncMethod().then((result) {
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+
+  asyncMethod() async {
+    await getRoutineList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     final today = DateTime.now();
+
+    if (isLoading == true) {
+      return Scaffold(
+          backgroundColor: Color(0xFFE9E9E9),
+          body: Center(
+            child: Image.asset(
+              'assets/logo.png',
+              width: height * 0.3,
+              height: height * 0.3,
+            ),
+          ));
+    }
 
     return new Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
@@ -126,9 +160,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       child: Row(
                         children: <Widget>[
                           SizedBox(width: 20),
-                          for (int i = 0; i < routines.length; i++)
+                          for (int i = 0; i < routineList.length; i++)
                             _routineCard(
-                              routine: routines[i],
+                              routine: routineList[i],
                             ),
                         ],
                       ),
@@ -166,9 +200,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       child: Row(
                         children: <Widget>[
                           SizedBox(width: 20),
-                          for (int i = 0; i < routines.length; i++)
+                          for (int i = 0; i < routineList.length; i++)
                             _routineCard(
-                              routine: routines[i],
+                              routine: routineList[i],
                             ),
                         ],
                       ),
@@ -191,7 +225,10 @@ class _routineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     return Container(
+        width: width * 0.4,
         margin: const EdgeInsets.only(
           right: 20,
           bottom: 15,
@@ -205,20 +242,29 @@ class _routineCard extends StatelessWidget {
                 Flexible(
                   fit: FlexFit.tight,
                   child: ClipRRect(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                    child: Image.asset(routine.imagePath,
-                        width: 150, fit: BoxFit.fitHeight),
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    child:
+                        Image.asset(routine.imagePath, fit: BoxFit.fitHeight),
                   ),
                 ),
                 Flexible(
                   fit: FlexFit.tight,
-                  child: Column(
-                    children: [
-                      Text(routine.muscleGroup),
-                      Text(routine.routineName),
-                      Text(routine.difficulty),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+
+                      children: [
+                        //SizedBox(height: 10),
+                        Text(
+                          routine.routineName,
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 10),
+                        Text(routine.description),
+
+                      ],
+                    ),
                   ),
                 ),
               ],

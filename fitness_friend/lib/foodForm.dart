@@ -162,7 +162,7 @@ class FoodFormState extends State<FoodForm> {
               widget.food == null
                   ? RaisedButton(
                 child: Text(
-                  'Submit',
+                  '$UID',
                   style: TextStyle(color: Colors.blue, fontSize: 16),
                 ),
                 onPressed: () {
