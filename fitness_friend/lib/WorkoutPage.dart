@@ -1,22 +1,32 @@
+import 'package:animations/animations.dart';
 import 'package:fitnessfriend/model/Routine.dart';
+import 'package:fitnessfriend/routinePreview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-
+import 'RoutineForm.dart';
 import 'database_helper.dart';
 
 class WorkoutPage extends StatefulWidget {
+  final int uid;
+
+  WorkoutPage(this.uid);
+
   @override
   _WorkoutPageState createState() => _WorkoutPageState();
 }
 
 class _WorkoutPageState extends State<WorkoutPage> {
-  List<Routine> routineList;
+  List<Routine> defaultRoutineList;
+  List<Routine> myRoutineList;
+
+
   bool isLoading = true;
 
-  getRoutineList() async {
-    routineList = await DatabaseHelper.instance.getRoutine();
+  getRoutineLists() async {
+    defaultRoutineList = await DatabaseHelper.instance.getDefaultRoutine();
+    myRoutineList = await DatabaseHelper.instance.getMyRoutine(widget.uid);
   }
 
   @override
@@ -30,7 +40,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   }
 
   asyncMethod() async {
-    await getRoutineList();
+    await getRoutineLists();
   }
 
   @override
@@ -90,7 +100,13 @@ class _WorkoutPageState extends State<WorkoutPage> {
                     SizedBox(
                       height: height * 0.15,
                       child: RaisedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      RoutineForm(widget.uid)));
+                        },
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
@@ -160,9 +176,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       child: Row(
                         children: <Widget>[
                           SizedBox(width: 20),
-                          for (int i = 0; i < routineList.length; i++)
+                          for (int i = 0; i < defaultRoutineList.length; i++)
                             _routineCard(
-                              routine: routineList[i],
+                              routine: defaultRoutineList[i],
                             ),
                         ],
                       ),
@@ -194,15 +210,24 @@ class _WorkoutPageState extends State<WorkoutPage> {
                           fontSize: 22,
                         )),
                   ),
+                  myRoutineList.isEmpty ?
+                  Center(
+                    heightFactor: 7.5,
+                      child:Text("Empty, please create a Work Out Routine",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: Colors.grey[600]),
+                        textAlign: TextAlign.center,)
+                  ) :
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: <Widget>[
                           SizedBox(width: 20),
-                          for (int i = 0; i < routineList.length; i++)
+//                          if (myRoutineList.isEmpty)
+//                            _routineCard(routine: placeHolder),
+                          for (int i = 0; i < myRoutineList.length; i++)
                             _routineCard(
-                              routine: routineList[i],
+                              routine: myRoutineList[i],
                             ),
                         ],
                       ),
@@ -227,47 +252,61 @@ class _routineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    return Container(
-        width: width * 0.4,
-        margin: const EdgeInsets.only(
-          right: 20,
-          bottom: 15,
-        ),
-        child: Material(
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-            elevation: 4,
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                    child:
-                        Image.asset(routine.imagePath, fit: BoxFit.fitHeight),
-                  ),
-                ),
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
 
-                      children: [
-                        //SizedBox(height: 10),
-                        Text(
-                          routine.routineName,
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 10),
-                        Text(routine.description),
-
-                      ],
+    return OpenContainer(
+      transitionType: ContainerTransitionType.fade,
+      transitionDuration: Duration(milliseconds: 1000),
+      closedColor: Color(0xFFE9E9E9),
+      openBuilder: (context, _) {
+        return RoutinePreview(routine.routineID, routine.routineName);
+      },
+      closedBuilder: (context, VoidCallback openContainer) {
+        return GestureDetector(
+          onTap: openContainer,
+          child: Container(
+            width: width * 0.4,
+            margin: const EdgeInsets.only(
+              right: 20,
+              bottom: 15,
+            ),
+            child: Material(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              elevation: 4,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  Flexible(
+                    fit: FlexFit.tight,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      child:
+                          Image.asset(routine.imagePath, fit: BoxFit.fitHeight),
                     ),
                   ),
-                ),
-              ],
-            )));
+                  Flexible(
+                    fit: FlexFit.tight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          //SizedBox(height: 10),
+                          Text(
+                            routine.routineName,
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          Text(routine.description),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

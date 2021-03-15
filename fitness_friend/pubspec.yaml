@@ -32,6 +32,8 @@ dependencies:
   path: ^1.6.4
   flutter_session: ^0.1.1
   shared_preferences: '>=0.5.12+4 <2.0.0'
+  animations: ^1.0.0+5
+  tuple: ^1.0.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -64,6 +66,10 @@ flutter:
      - assets/pushWorkout.jpg
      - assets/exercises.json
      - assets/workouts.json
+     - assets/routineList.PNG
+     - assets/gymdoodles.jpg
+     - assets/gymthings.png
+     - assets/emptyRoutine.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

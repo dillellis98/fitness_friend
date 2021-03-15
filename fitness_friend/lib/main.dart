@@ -1,7 +1,10 @@
+import 'package:fitnessfriend/ProfilePage.dart';
+import 'package:fitnessfriend/WorkoutPage.dart';
 import 'package:fitnessfriend/database_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'FoodLog.dart';
 import 'Register.dart';
 import 'bloc/food_bloc.dart';
@@ -13,6 +16,9 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
+
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<FoodBloc>(

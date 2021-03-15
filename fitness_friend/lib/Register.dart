@@ -313,8 +313,8 @@ class _RegisterState extends State<Register> {
 
                             if (_gender == "Female") {
                               dailyCals =
-                                  10 * weight + 6.25 * height - 5 * age -
-                                      161 * _dailyActivity;
+                                  (10 * weight + 6.25 * height - 5 * age -
+                                      161) * _dailyActivity;
                               calsLeft = dailyCals;
                               print("cals is $dailyCals");
                               print("cals left is $calsLeft");
@@ -364,6 +364,7 @@ class _RegisterState extends State<Register> {
                           });
 
                           if (_validate == false) {
+
                             List<Map<String,
                                 dynamic>> queryRows = await DatabaseHelper
                                 .instance.userQueryAll();

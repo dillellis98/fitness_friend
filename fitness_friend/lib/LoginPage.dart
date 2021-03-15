@@ -82,6 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                       });
                       int queryLogin = await DatabaseHelper.instance.checkLogin(username, password);
                       int uid = await DatabaseHelper.instance.getUserID(username);
+                      int updated = await DatabaseHelper.instance.setDefaultRoutines(uid);
                       print("Login page has $uid");
 
                       if (queryLogin == 1) {

@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fitnessfriend/model/RoutineExercise.dart';
 import 'package:fitnessfriend/model/exercise.dart';
+import 'package:fitnessfriend/model/exerciseLog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -14,7 +17,7 @@ import 'model/Routine.dart';
 import 'model/User.dart';
 
 class DatabaseHelper {
-  static final _dbName = 'progress.db';
+  static final _dbName = 'logg.db';
   static final _dbVersion = 1;
   static final userTable = 'user';
   static final userID = 'userID';
@@ -49,10 +52,6 @@ class DatabaseHelper {
   static const String exerciseTable = "exercise";
   static const String exerciseID = "exerciseID";
   static const String exerciseName = "exerciseName";
-  static const String muscleGroupFK = "muscleGroupFK";
-
-  static const String muscleTable = "muscleTable";
-  static const String muscleGroupID = "muscleGroupID";
   static const String muscleGroup = "muscleGroup";
 
   static const String routineTable = "routineTable";
@@ -60,10 +59,20 @@ class DatabaseHelper {
   static const String routineName = "routineName";
   static const String description = "description";
   static const String imagePath = "imagePath";
+  static const String isDefault = "isDefault";
 
   static const String routine_exercise = "routine_exercise";
+  static const String routine_exercisePK = "routine_exercisePK";
   static const String exerciseFK = "exerciseFK";
   static const String routineFK = "routineFK";
+
+  static const String logTable = "logTable";
+  static const String logID = "logID";
+  static const String logWeight = "weight";
+  static const String trackingNum = "trackingNum";
+  static const String logReps = "reps";
+  static const String logDate = "logDate";
+  static const String routine_exerciseFK = "routine_exerciseFK";
 
 
   DatabaseHelper._privateConstructor();
@@ -122,29 +131,12 @@ class DatabaseHelper {
         )
         ''');
 
-    db.execute('''
-        CREATE TABLE $muscleTable(
-        $muscleGroupID INTEGER PRIMARY KEY,
-        $muscleGroup TEXT NOT NULL
-        )
-        ''');
-
-    db.execute('''
-        INSERT INTO $muscleTable VALUES
-        (1, "Chest"),
-        (2, "Back"),
-        (3, "Shoulders"),
-        (4, "Arms"),
-        (5, "Core"),
-        (6, "Legs")
-        ''');
 
     db.execute('''
         CREATE TABLE $exerciseTable(
         $exerciseID INTEGER PRIMARY KEY,
         $exerciseName TEXT NOT NULL,
-        $muscleGroupFK INTEGER,
-        FOREIGN KEY($muscleGroupFK) REFERENCES $muscleTable($muscleGroupID)
+        $muscleGroup TEXT NOT NULL
         )
         ''');
 
@@ -153,10 +145,37 @@ class DatabaseHelper {
         $routineID INTEGER PRIMARY KEY,
         $routineName TEXT NOT NULL,
         $description TEXT NOT NULL,
-        $imagePath TEXT
+        $imagePath TEXT,
+        $isDefault BOOLEAN NOT NULL CHECK ($isDefault IN (0,1)),
+        $userFK INTEGER,
+        FOREIGN KEY($userFK) REFERENCES $userTable($userID)
         )
         ''');
 
+    db.execute('''
+    CREATE TABLE $routine_exercise(
+    $routineFK INTEGER NOT NULL,
+    $exerciseFK INTEGER NOT NULL,
+    FOREIGN KEY($routineFK) REFERENCES $routineTable($routineID),
+    FOREIGN KEY($exerciseFK) REFERENCES $exerciseTable($exerciseID),
+    PRIMARY KEY($routineFK, $exerciseFK)
+    )
+    ''');
+
+
+    db.execute('''
+    CREATE TABLE $logTable(
+    $logID INTEGER PRIMARY KEY,
+    $logWeight INTEGER,
+    $logReps INTEGER NOT NULL,
+    $logDate TEXT NOT NULL,
+    $trackingNum INTEGER NOT NULL,
+    $routineFK INTEGER NOT NULL,
+    $exerciseFK INTEGER NOT NULL,
+    FOREIGN KEY ($routineFK, $exerciseFK) REFERENCES $routine_exercise ($routineFK, $exerciseFK)
+    )
+    
+    ''');
 
     Batch batch = db.batch();
 
@@ -179,20 +198,11 @@ class DatabaseHelper {
     });
 
     batch.commit();
-
-    db.execute('''
-    CREATE TABLE $routine_exercise(
-    $routineFK INTEGER NOT NULL,
-    $exerciseFK INTEGER NOT NULL,
-    CONSTRAINT [RFK] FOREIGN KEY($routineFK) REFERENCES $routineTable($routineID),
-    CONSTRAINT [EFK] FOREIGN KEY($exerciseFK) REFERENCES $exerciseTable($exerciseID),
-    CONSTRAINT [RFK_EFK] PRIMARY KEY ($routineFK, $exerciseID)
-    )
-    ''');
   }
 
   //USER TABLE QUERIES
   //--------------------------------------------------------------//
+
   Future<int> userInsert(Map<String, dynamic> row) async {
     Database db = await instance.database;
     return await db.insert(userTable, row);
@@ -387,11 +397,11 @@ class DatabaseHelper {
     final db = await instance.database;
     food.fid = await db.insert(foodTable, food.toMap());
     await db.rawQuery("UPDATE $userTable SET"
-                      " $calsLeft = $calsLeft - $cals,"
-                      " $protienLeft = $protienLeft - $protien,"
-                      " $carbsLeft = $carbsLeft - $carbs,"
-                      " $fatLeft = $fatLeft -$fat"
-                      " WHERE $userID = $uid");
+        " $calsLeft = $calsLeft - $cals,"
+        " $protienLeft = $protienLeft - $protien,"
+        " $carbsLeft = $carbsLeft - $carbs,"
+        " $fatLeft = $fatLeft -$fat"
+        " WHERE $userID = $uid");
     return food;
   }
 
@@ -422,7 +432,6 @@ class DatabaseHelper {
     final db = await instance.database;
 
 
-
     return await db.update(
       foodTable,
       food.toMap(),
@@ -434,16 +443,30 @@ class DatabaseHelper {
 //ROUTINE TABLE QUERIES
 //--------------------------------------------------------------//
 
-  Future<List<Routine>> getRoutine() async {
+  Future<int> setDefaultRoutines(UID) async {
+    final uid = UID;
+    final db = await instance.database;
+
+    int result = await db.rawUpdate("UPDATE $routineTable "
+        "SET $userFK = $uid "
+        "WHERE $routineID IN (1, 2, 3)");
+
+    return result;
+  }
+
+  Future<List<Routine>> getDefaultRoutine() async {
     final db = await instance.database;
     var routines = await db.query(
-      routineTable,
-      columns: [
-        routineID,
-        routineName,
-        description,
-        imagePath
-      ]
+        routineTable,
+        columns: [
+          routineID,
+          routineName,
+          description,
+          imagePath,
+          isDefault,
+          userFK
+        ],
+        where: "isDefault = 1"
     );
 
     List<Routine> routineList = List<Routine>();
@@ -455,5 +478,98 @@ class DatabaseHelper {
     });
 
     return routineList;
+  }
+
+  Future<List<Routine>> getMyRoutine(uid) async {
+    int userid = uid;
+    final db = await instance.database;
+    var routines = await db.rawQuery(
+        "SELECT * FROM $routineTable WHERE $isDefault = 0 AND $userFK = $userid"
+    );
+
+    List<Routine> routineList = List<Routine>();
+
+    routines.forEach((currentRoutine) {
+      Routine routine = Routine.fromMap(currentRoutine);
+
+      routineList.add(routine);
+    });
+
+    return routineList;
+  }
+
+
+  Future<int> routineInsert(Routine routine) async {
+    final db = await instance.database;
+    int result = await db.insert(routineTable, routine.toMap());
+
+    return result;
+  }
+
+//EXERCISE TABLE QUERIES
+//--------------------------------------------------------------//
+
+  Future<List<Exercise>> getExercises() async {
+    final db = await instance.database;
+    var exercises = await db.query(
+        exerciseTable,
+        columns: [
+          exerciseID,
+          exerciseName,
+          muscleGroup
+        ]
+    );
+
+    List<Exercise> exerciseList = List<Exercise>();
+
+    exercises.forEach((currentExercise) {
+      Exercise exercise = Exercise.fromMap(currentExercise);
+
+      exerciseList.add(exercise);
+    });
+
+    return exerciseList;
+  }
+
+
+//EXERCISE_ROUTINE TABLE QUERIES
+//--------------------------------------------------------------//
+
+  Future<int> linkTableInsert(RoutineExercise routineExercise) async {
+    final db = await instance.database;
+    int result = await db.insert(routine_exercise, routineExercise.toMap());
+
+    return result;
+  }
+
+  Future<List<Exercise>> getRoutineExercises(int routineID) async {
+    int RID = routineID;
+
+    final db = await instance.database;
+    var exercises = await db.rawQuery("SELECT * FROM $exerciseTable "
+        "JOIN $routine_exercise "
+        "ON $exerciseTable.$exerciseID = $routine_exercise.$exerciseFK "
+        "WHERE $routine_exercise.$routineFK = $RID");
+
+    List<Exercise> exerciseList = List<Exercise>();
+
+    exercises.forEach((currentExercise) {
+      Exercise exercise = Exercise.fromMap(currentExercise);
+
+      exerciseList.add(exercise);
+    });
+
+    return exerciseList;
+  }
+
+
+//EXERCISELOG TABLE QUERIES
+//--------------------------------------------------------------//
+
+  Future<int> logInsert(ExerciseLog log) async {
+    final db = await instance.database;
+    int result = await db.insert(logTable, log.toMap());
+
+    return result;
   }
 }

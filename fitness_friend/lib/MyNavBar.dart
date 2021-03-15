@@ -50,7 +50,7 @@ class _MyNavBarState extends State<MyNavBar> {
         pageChanged(index);
       },
       children: <Widget>[
-        WorkoutPage(),
+        WorkoutPage(widget.uid),
         FoodLog(widget.uid),
         ProfilePage()
       ],
