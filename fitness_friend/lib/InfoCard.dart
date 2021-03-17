@@ -1,98 +1,120 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'GraphLog.dart';
+import 'database_helper.dart';
 import 'line_chart.dart';
 import 'package:flutter/material.dart';
+import 'graphLog.dart';
 
+import 'model/GraphData.dart';
+import 'model/exercise.dart';
+import 'model/exerciseLog.dart';
 
-class InfoCard extends StatelessWidget {
+class InfoCard extends StatefulWidget {
   final String title;
-  final int effectedNum;
-  final Function press;
-  const InfoCard({
-    Key key,
+  final int eid;
+  final int uid;
+
+  const InfoCard(
     this.title,
-    this.effectedNum,
-    this.press,
-  }) : super(key: key);
+    this.eid,
+    this.uid,
+  );
 
   @override
+  _InfoCardState createState() => _InfoCardState();
+}
+
+class _InfoCardState extends State<InfoCard> {
+  List<Exercise> allExercises;
+
+  getExerciseList() async {
+    allExercises = await DatabaseHelper.instance.getExercises();
+  }
+
+  @override
+  @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GestureDetector(
-          onTap: press,
-          child: Container(
-            width: constraints.maxWidth / 2 - 10,
-            // Here constraints.maxWidth provide us the available width for the widget
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      splashColor: Color(0xff68D065),
+      onTap: ()async{
+        List<ExerciseLog> loglist = await DatabaseHelper.instance.getExerciseLogGraph(widget.eid, widget.uid);
+        List<GraphData> data;
+
+        for(int i = 0; i < loglist.length; i++){
+          data.add(new GraphData(loglist[i].weight, loglist[i].logdate));
+        }
+
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (BuildContext context) =>
+                    ));
+      },
+
+      child: Card(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
                 children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Row(
-                      children: <Widget>[
-                        // wrapped within an expanded widget to allow for small density device
-                        Expanded(
-                          child: Container(
-                            height: 30,
-                            width: 30,
-                            decoration: BoxDecoration(
-                              color: Color(0xff284FC2).withOpacity(0.5) ,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(FontAwesomeIcons.dumbbell),
-                          ),
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.fade,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        )
-                      ],
+                  Icon(
+                    FontAwesomeIcons.dumbbell,
+                    color: Color(0xff68D065),
+                  ),
+                  SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      widget.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "$effectedNum \n",
-                                  style:
-                                  Theme.of(context).textTheme.headline6.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: LineReportChart(),
-                        ),
-                      ],
-                    ),
-                  )
                 ],
               ),
             ),
-          ),
-        );
-      },
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: "${widget.eid}\n",
+                            style:
+                                Theme.of(context).textTheme.headline6.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: LineReportChart(),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+      ),
     );
   }
 }

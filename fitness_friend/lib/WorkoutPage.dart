@@ -223,8 +223,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       child: Row(
                         children: <Widget>[
                           SizedBox(width: 20),
-//                          if (myRoutineList.isEmpty)
-//                            _routineCard(routine: placeHolder),
+
                           for (int i = 0; i < myRoutineList.length; i++)
                             _routineCard(
                               routine: myRoutineList[i],

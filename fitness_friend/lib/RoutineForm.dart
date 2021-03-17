@@ -96,7 +96,7 @@ class _RoutineFormState extends State<RoutineForm> {
 
                   Navigator.push(context,
                     MaterialPageRoute(builder: (context) =>
-                        ExercisePicker(_routineName, _routineDesc, allExercises)));},
+                        ExercisePicker(_routineName, _routineDesc,true ,allExercises)));},
               ),
           ),
             ],

@@ -52,7 +52,7 @@ class _MyNavBarState extends State<MyNavBar> {
       children: <Widget>[
         WorkoutPage(widget.uid),
         FoodLog(widget.uid),
-        ProfilePage()
+        ProfilePage(widget.uid)
       ],
     );
   }

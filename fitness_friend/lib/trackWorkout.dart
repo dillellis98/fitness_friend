@@ -2,6 +2,7 @@ import 'package:fitnessfriend/database_helper.dart';
 import 'package:fitnessfriend/model/exerciseLog.dart';
 import 'package:fitnessfriend/model/exerciseLog.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tuple/tuple.dart';
 
 import 'ExercisePicker.dart';
@@ -228,7 +229,8 @@ class _LogRowState extends State<LogRow> {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final logTime = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    final String logTime = formatter.format(today);
 
     return Container(
       padding: EdgeInsets.only(top: 10),
@@ -299,13 +301,6 @@ class _LogRowState extends State<LogRow> {
                         trackingNum: trackNum,
                         routineFK: widget.RID,
                         exerciseFK: widget.exercise.exerciseID));
-
-                    print("${exerciseLog.first.reps}");
-                    print("${exerciseLog.first.weight}");
-                    print("${exerciseLog.first.routineFK}");
-                    print("${exerciseLog.first.exerciseFK}");
-                    print("${exerciseLog.first.logdate}");
-
 
 
                   } else {

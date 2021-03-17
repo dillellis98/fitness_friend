@@ -42,6 +42,7 @@ class editFoodFormState extends State<editFoodForm> {
     getCurrentUID('UID').then((value) =>
     UID = value
     );
+    print("uid is: $UID");
     _name = widget.foodToEdit.name;
     _calories = widget.foodToEdit.calories;
     _protien = widget.foodToEdit.protiens;

@@ -13,21 +13,17 @@ import 'model/Routine.dart';
 class ExercisePicker extends StatefulWidget {
   final String routineName;
   final String routineDesc;
+  final bool multiSelect;
   final List<Exercise> allExercises;
 
-
-  ExercisePicker(this.routineName, this.routineDesc, this.allExercises);
-
+  ExercisePicker(
+      this.routineName, this.routineDesc, this.multiSelect, this.allExercises);
 
   @override
-  _RoutineFormState createState() => _RoutineFormState();
+  _ExercisePickerState createState() => _ExercisePickerState();
 }
 
-
-
-
-class _RoutineFormState extends State<ExercisePicker> {
-
+class _ExercisePickerState extends State<ExercisePicker> {
   Future<int> getCurrentUID(String key) async {
     var pref = await SharedPreferences.getInstance();
     var number = pref.getInt(key);
@@ -41,8 +37,6 @@ class _RoutineFormState extends State<ExercisePicker> {
   bool isLoading = true;
   String searchtext = '';
 
-
-
 //  getExerciseList() async {
 //    allExercises = await DatabaseHelper.instance.getExercises();
 //  }
@@ -50,8 +44,7 @@ class _RoutineFormState extends State<ExercisePicker> {
   @override
   void initState() {
     super.initState();
-    getCurrentUID('UID').then((value) =>
-    UID = value);
+    getCurrentUID('UID').then((value) => UID = value);
 //    asyncMethod().then((result) {
 //        setState(() {
 //          isLoading = false;
@@ -71,21 +64,13 @@ class _RoutineFormState extends State<ExercisePicker> {
     return countryLower.contains(textLower);
   }
 
-
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery
-        .of(context)
-        .size
-        .height;
-    final width = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     final today = DateTime.now();
 
     var exerciseList = widget.allExercises.where(containsSearchText).toList();
-
 
     return Scaffold(
         appBar: AppBar(
@@ -97,70 +82,78 @@ class _RoutineFormState extends State<ExercisePicker> {
               text: searchtext,
               onChanged: (searchtext) =>
                   setState(() => this.searchtext = searchtext),
-              hintText: 'Search Exercises',
+              hintText: 'Search Exercise',
             ),
           ),
         ),
         body: Column(
           children: <Widget>[
-            Expanded(child: ListView(
-              children: exerciseList.map((exercise) {
-                final isSelected = selectedExercises.contains(exercise);
+            Expanded(
+              child: ListView(
+                children: exerciseList.map((exercise) {
+                  final isSelected = selectedExercises.contains(exercise);
 
-                return ExerciseListTile(
-                  exercise: exercise,
-                  isSelected: isSelected,
-                  onSelectedExercise: selectExercise,
-                );
-              }).toList(),
-            ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: StadiumBorder(),
-                  minimumSize: Size.fromHeight(40),
-                  primary: Color(0xff68D065),
-                ),
-                child: Text(
-                  "Select ${selectedExercises.length} Exercises",
-                  style: TextStyle(color: Colors.white,fontSize: 16),
-                ),
-                onPressed: (){
-
-                  Routine routine = Routine(
-                    routineName: widget.routineName,
-                    description: widget.routineDesc,
-                    imagePath: "assets/gymthings.png",
-                    isDefault: 0,
-                    userFK: UID,
+                  return ExerciseListTile(
+                    exercise: exercise,
+                    isSelected: isSelected,
+                    onSelectedExercise: selectExercise,
                   );
-                  DatabaseHelper.instance.routineInsert(routine).then((value) =>
+                }).toList(),
+              ),
+            ),
+            Visibility(
+              visible: (widget.multiSelect == true),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: StadiumBorder(),
+                    minimumSize: Size.fromHeight(40),
+                    primary: Color(0xff68D065),
+                  ),
+                  child: Text(
+                    "Select ${selectedExercises.length} Exercises",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  onPressed: () {
+                    Routine routine = Routine(
+                      routineName: widget.routineName,
+                      description: widget.routineDesc,
+                      imagePath: "assets/gymthings.png",
+                      isDefault: 0,
+                      userFK: UID,
+                    );
+                    DatabaseHelper.instance
+                        .routineInsert(routine)
+                        .then((value) => selectedExercises.forEach((element) {
+                              RoutineExercise routineExercise = RoutineExercise(
+                                  routineFK: value,
+                                  exerciseFK: element.exerciseID);
 
-                      selectedExercises.forEach((element) {
-                        RoutineExercise routineExercise = RoutineExercise(
-                          routineFK: value,
-                          exerciseFK: element.exerciseID
-                        );
+                              DatabaseHelper.instance
+                                  .linkTableInsert(routineExercise);
+                            }));
 
-                        DatabaseHelper.instance.linkTableInsert(routineExercise);
-                      })
-                  );
-
-                  int count = 0;
-                  Navigator.of(context).popUntil((_) => count++ >= 2);
-                },
+                    int count = 0;
+                    Navigator.of(context).popUntil((_) => count++ >= 2);
+                  },
+                ),
               ),
             ),
           ],
-        )
-    );
+        ));
   }
 
-  void selectExercise(Exercise exercise){
-  final isSelected = selectedExercises.contains(exercise);
-  setState(() => isSelected ? selectedExercises.remove(exercise)
-      : selectedExercises.add(exercise));
+  void selectExercise(Exercise exercise) async {
+    if (widget.multiSelect == true) {
+      final isSelected = selectedExercises.contains(exercise);
+      setState(() => isSelected
+          ? selectedExercises.remove(exercise)
+          : selectedExercises.add(exercise));
+    } else {
+
+      var result = await DatabaseHelper.instance.setgraphed(exercise.exerciseID);
+      Navigator.pop(context, exercise);
+    }
   }
 }

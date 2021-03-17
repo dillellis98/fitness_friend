@@ -17,7 +17,7 @@ import 'model/Routine.dart';
 import 'model/User.dart';
 
 class DatabaseHelper {
-  static final _dbName = 'logg.db';
+  static final _dbName = 'apples.db';
   static final _dbVersion = 1;
   static final userTable = 'user';
   static final userID = 'userID';
@@ -53,6 +53,8 @@ class DatabaseHelper {
   static const String exerciseID = "exerciseID";
   static const String exerciseName = "exerciseName";
   static const String muscleGroup = "muscleGroup";
+  static const String isGraphed = "isGraphed";
+
 
   static const String routineTable = "routineTable";
   static const String routineID = "routineID";
@@ -73,6 +75,7 @@ class DatabaseHelper {
   static const String logReps = "reps";
   static const String logDate = "logDate";
   static const String routine_exerciseFK = "routine_exerciseFK";
+
 
 
   DatabaseHelper._privateConstructor();
@@ -136,7 +139,8 @@ class DatabaseHelper {
         CREATE TABLE $exerciseTable(
         $exerciseID INTEGER PRIMARY KEY,
         $exerciseName TEXT NOT NULL,
-        $muscleGroup TEXT NOT NULL
+        $muscleGroup TEXT NOT NULL,
+        $isGraphed BOOLEAN NOT NULL CHECK ($isGraphed IN (0,1))
         )
         ''');
 
@@ -176,6 +180,7 @@ class DatabaseHelper {
     )
     
     ''');
+
 
     Batch batch = db.batch();
 
@@ -227,47 +232,56 @@ class DatabaseHelper {
     return uid;
   }
 
-  Future<User> getUser(int UID) async {
+  Future<String> getUserName(int uid) async {
+
     Database db = await instance.database;
+    String sql = "SELECT $userName FROM $userTable WHERE userID = '$uid'";
+    var query = await db.rawQuery(sql);
+    if (query.length > 0){
+      String result = query.first.values.first.toString();
+      return result;
+    } else{
+      return null;
+    }
 
-    int uid = UID;
-    var user = await db.query(
-      userTable,
-      columns: [
-        userID,
-        userName,
-        userPassword,
-        userdob,
-        userWeight,
-        userGoal,
-        userActivity,
-        userGender,
-        dailyKcal,
-        dailyProtien,
-        dailyCarbs,
-        dailyFat,
-        calsLeft,
-        protienLeft,
-        carbsLeft,
-        fatLeft
 
-      ],
-      where: "userID = ?",
-      whereArgs: [uid],
-    );
-
-    List<User> userList = List<User>();
-
-    user.forEach((currentUser) {
-      User user = User.fromMap(currentUser);
-
-      userList.add(user);
-    });
-
-    User result = userList.first;
-
-    return result;
   }
+
+
+  Future<int> getUserHeight(int uid) async {
+    Database db = await instance.database;
+    int res = Sqflite.firstIntValue(await db.rawQuery(
+        "SELECT $userHeight FROM $userTable WHERE userID = '$uid'"));
+    print("DB height are $res");
+
+    return res;
+  }
+
+  Future<double> getUserWeight(int uid) async {
+
+    Database db = await instance.database;
+    String sql = "SELECT $userWeight FROM $userTable WHERE userID = '$uid'";
+    var query = await db.rawQuery(sql);
+    if (query.length > 0){
+      String result = query.first.values.first.toString();
+      double weight = double.parse(result);
+      return weight;
+    } else{
+      return null;
+    }
+
+
+  }
+
+  Future<int> getUserGoal(int uid) async {
+    Database db = await instance.database;
+    int res = Sqflite.firstIntValue(await db.rawQuery(
+        "SELECT $userGoal FROM $userTable WHERE userID = '$uid'"));
+    print("DB weight are $res");
+
+    return res;
+  }
+
 
   Future<int> getUserCarbs(int uid) async {
     Database db = await instance.database;
@@ -516,7 +530,8 @@ class DatabaseHelper {
         columns: [
           exerciseID,
           exerciseName,
-          muscleGroup
+          muscleGroup,
+          isGraphed
         ]
     );
 
@@ -528,10 +543,47 @@ class DatabaseHelper {
       exerciseList.add(exercise);
     });
 
+
     return exerciseList;
   }
 
+  Future<List<Exercise>> getGraphExercises() async {
+    final db = await instance.database;
+    var exercises = await db.query(
+      exerciseTable,
+      columns: [
+        exerciseID,
+        exerciseName,
+        muscleGroup,
+        isGraphed
+      ],
+      where: "$isGraphed = ?",
+      whereArgs: [1]
 
+    );
+
+    List<Exercise> exerciseList = List<Exercise>();
+
+    exercises.forEach((currentExercise) {
+      Exercise exercise = Exercise.fromMap(currentExercise);
+
+      exerciseList.add(exercise);
+    });
+
+
+    return exerciseList;
+  }
+
+  Future<int> setgraphed(EID) async {
+    final eid = EID;
+    final db = await instance.database;
+
+    int result = await db.rawUpdate("UPDATE $exerciseTable "
+        "SET $isGraphed = 1 "
+        "WHERE $exerciseID = $eid");
+
+    return result;
+  }
 //EXERCISE_ROUTINE TABLE QUERIES
 //--------------------------------------------------------------//
 
@@ -572,4 +624,33 @@ class DatabaseHelper {
 
     return result;
   }
+
+//GRAPHING EXERCISE QUERIES
+//--------------------------------------------------------------//
+
+  Future<List<ExerciseLog>> getExerciseLogGraph(int eid, int uid) async {
+
+    final db = await instance.database;
+    var logs = await db.rawQuery("SELECT * FROM $logTable "
+        "JOIN $routine_exercise "
+        "ON $logTable.$routineFK = $routine_exercise.$routineFK "
+        "JOIN $routineTable "
+        "ON $routine_exercise.$routineFK = $routineTable.$routineID "
+        "WHERE $routineTable.$userFK = $uid AND $logTable.$exerciseFK = $eid");
+
+    List<ExerciseLog> ExerciseLogList = List<ExerciseLog>();
+
+    logs.forEach((currentLog) {
+      ExerciseLog log = ExerciseLog.fromMap(currentLog);
+
+      ExerciseLogList.add(log);
+    });
+
+    for(int i = 0; i < ExerciseLogList.length; i++){
+      print("List item $i is ${ExerciseLogList[i].logID}");
+    }
+
+    return ExerciseLogList;
+  }
+
 }
