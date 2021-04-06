@@ -5,6 +5,7 @@ import 'package:fitnessfriend/model/RoutineExercise.dart';
 import 'package:fitnessfriend/model/exercise.dart';
 import 'package:fitnessfriend/model/exerciseLog.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,7 +18,7 @@ import 'model/Routine.dart';
 import 'model/User.dart';
 
 class DatabaseHelper {
-  static final _dbName = 'apples.db';
+  static final _dbName = 'newdatabase.db';
   static final _dbVersion = 1;
   static final userTable = 'user';
   static final userID = 'userID';
@@ -193,15 +194,6 @@ class DatabaseHelper {
       batch.insert(exerciseTable, exercise.toMap());
     });
 
-    String workoutJson = await rootBundle.loadString('assets/workouts.json');
-    List workoutList = json.decode(workoutJson);
-
-
-    workoutList.forEach((val) {
-      Routine routine = Routine.fromMap(val);
-      batch.insert(routineTable, routine.toMap());
-    });
-
     batch.commit();
   }
 
@@ -212,6 +204,18 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db.insert(userTable, row);
   }
+
+  Future updateMacros(int uid) async {
+    Database db = await instance.database;
+    return await db.rawQuery("UPDATE $userTable SET "
+                             "$calsLeft = $dailyKcal, "
+                             "$carbsLeft = $dailyCarbs, "
+                             "$protienLeft = $dailyProtien, "
+                             "$fatLeft = $dailyFat "
+                             "WHERE $userID = $uid"
+    );
+  }
+
 
   Future<List<Map<String, dynamic>>> userQueryAll() async {
     Database db = await instance.database;
@@ -228,7 +232,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int uid = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $userID FROM $userTable WHERE username = '$userName'"));
-    print("user id is $uid");
     return uid;
   }
 
@@ -252,7 +255,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $userHeight FROM $userTable WHERE userID = '$uid'"));
-    print("DB height are $res");
 
     return res;
   }
@@ -277,7 +279,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $userGoal FROM $userTable WHERE userID = '$uid'"));
-    print("DB weight are $res");
 
     return res;
   }
@@ -287,7 +288,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $dailyCarbs FROM $userTable WHERE userID = '$uid'"));
-    print("DB carbs are $res");
 
     return res;
   }
@@ -296,7 +296,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $dailyKcal FROM $userTable WHERE userID = '$uid'"));
-    print("DB cals are $res");
 
     return res;
   }
@@ -305,8 +304,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $dailyProtien FROM $userTable WHERE userID = '$uid'"));
-    print("DB protien are $res");
-
     return res;
   }
 
@@ -314,7 +311,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $dailyFat FROM $userTable WHERE userID = '$uid'"));
-    print("DB fats are $res");
 
     return res;
   }
@@ -323,7 +319,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $fatLeft FROM $userTable WHERE userID = '$uid'"));
-    print("DB fats left are $res");
 
     return res;
   }
@@ -332,7 +327,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $calsLeft FROM $userTable WHERE userID = '$uid'"));
-    print("DB cals left are $res");
 
     return res;
   }
@@ -341,7 +335,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $protienLeft FROM $userTable WHERE userID = '$uid'"));
-    print("DB fats are $res");
 
     return res;
   }
@@ -350,7 +343,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     int res = Sqflite.firstIntValue(await db.rawQuery(
         "SELECT $carbsLeft FROM $userTable WHERE userID = '$uid'"));
-    print("DB fats are $res");
 
     return res;
   }
@@ -359,8 +351,6 @@ class DatabaseHelper {
     final dbClient = await instance.database;
     var res = await dbClient.rawQuery(
         "SELECT * FROM $userTable WHERE username = '$userName' and password = '$password'");
-
-    print("$res");
 
     if (res.length > 0) {
       return 1;
@@ -408,15 +398,23 @@ class DatabaseHelper {
     var carbs = food.carbohydrates;
     var fat = food.fats;
     var uid = food.userFK;
+
+
     final db = await instance.database;
     food.fid = await db.insert(foodTable, food.toMap());
     await db.rawQuery("UPDATE $userTable SET"
-        " $calsLeft = $calsLeft - $cals,"
-        " $protienLeft = $protienLeft - $protien,"
-        " $carbsLeft = $carbsLeft - $carbs,"
-        " $fatLeft = $fatLeft -$fat"
+        " $calsLeft = CASE WHEN ($calsLeft - $cals) <= 0 THEN 0 ELSE ($calsLeft - $cals) END,"
+        " $protienLeft = CASE WHEN ($protienLeft - $protien) <= 0 THEN 0 ELSE ($protienLeft - $protien) END,"
+        " $carbsLeft = CASE WHEN ($carbsLeft - $carbs) <= 0 THEN 0 ELSE ($carbsLeft - $carbs) END,"
+        " $fatLeft = CASE WHEN ($fatLeft - $fat) <= 0 THEN 0 ELSE ($fatLeft - $fat) END"
         " WHERE $userID = $uid");
     return food;
+  }
+
+  Future removeYesterdaysFood(uid) async{
+    Database db = await instance.database;
+    return await db.rawQuery("DELETE FROM $foodTable WHERE $userFK = $uid");
+
   }
 
   Future<int> foodDelete(Food food) async {
@@ -457,18 +455,42 @@ class DatabaseHelper {
 //ROUTINE TABLE QUERIES
 //--------------------------------------------------------------//
 
-  Future<int> setDefaultRoutines(UID) async {
-    final uid = UID;
+  Future setDefaultRoutines(UID) async {
     final db = await instance.database;
+    String workoutJson = await rootBundle.loadString('assets/workouts.json');
+    List workoutList = json.decode(workoutJson);
 
-    int result = await db.rawUpdate("UPDATE $routineTable "
-        "SET $userFK = $uid "
-        "WHERE $routineID IN (1, 2, 3)");
+    Batch batch = db.batch();
 
-    return result;
+    workoutList.forEach((val) {
+      Routine routine = Routine.fromMap(val);
+      routine.userFK = UID;
+      batch.insert(routineTable, routine.toMap());
+    });
+
+    batch.commit();
+
+    List<Routine> routineList = [];
+    var routines = await db.query(routineTable);
+    routines.forEach((currentRoutine) {
+      Routine routine = Routine.fromMap(currentRoutine);
+
+      routineList.add(routine);
+    });
+    Iterable inReverse = routineList.reversed;
+    List<Routine> routinesReversed = inReverse.toList();
+    int routine1 = routinesReversed[0].routineID;
+    int routine2 = routinesReversed[1].routineID;
+    int routine3 = routinesReversed[2].routineID;
+    
+    await db.rawQuery("INSERT INTO $routine_exercise ($routineFK, $exerciseFK) "
+                      "VALUES ($routine1, 84), ($routine1, 67), ($routine1, 381), ($routine1, 156), "
+                             "($routine2, 705), ($routine2, 96), ($routine2, 714), ($routine2, 221), "
+                             "($routine3, 64), ($routine3, 73), ($routine3, 79), ($routine3, 681)");
+    
   }
 
-  Future<List<Routine>> getDefaultRoutine() async {
+  Future<List<Routine>> getDefaultRoutine(uid) async {
     final db = await instance.database;
     var routines = await db.query(
         routineTable,
@@ -480,7 +502,7 @@ class DatabaseHelper {
           isDefault,
           userFK
         ],
-        where: "isDefault = 1"
+        where: "isDefault = 1 AND userFK = $uid"
     );
 
     List<Routine> routineList = List<Routine>();
@@ -584,6 +606,16 @@ class DatabaseHelper {
 
     return result;
   }
+
+  Future resetGraphs() async {
+    final db = await instance.database;
+
+    int result = await db.rawUpdate("UPDATE $exerciseTable "
+        "SET $isGraphed = 0 "
+        );
+
+    return result;
+  }
 //EXERCISE_ROUTINE TABLE QUERIES
 //--------------------------------------------------------------//
 
@@ -646,9 +678,6 @@ class DatabaseHelper {
       ExerciseLogList.add(log);
     });
 
-    for(int i = 0; i < ExerciseLogList.length; i++){
-      print("List item $i is ${ExerciseLogList[i].logID}");
-    }
 
     return ExerciseLogList;
   }

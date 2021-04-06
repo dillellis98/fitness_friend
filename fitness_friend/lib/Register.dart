@@ -298,69 +298,50 @@ class _RegisterState extends State<Register> {
                             usernameCon.text.isEmpty ? _validate = true : _validate = false;
                             passwordCon.text.isEmpty ? _validate = true : _validate = false;
 
+                            // male Mifflin-St Jeor formula
                             if (_gender == "Male") {
                               dailyCals =
                                   ((10 * weight) + (6.25 * height) - (5 * age) +
                                       5) * _dailyActivity;
                               calsLeft = dailyCals;
-                              print("cals is $dailyCals");
-                              print("cals left is $calsLeft");
-                              print("weight is $weight");
-                              print("height is $height");
-                              print("age is $age");
-                              print("gender is $_gender");
                             }
 
+                            // female Mifflin-St Jeor formula
                             if (_gender == "Female") {
                               dailyCals =
                                   (10 * weight + 6.25 * height - 5 * age -
                                       161) * _dailyActivity;
                               calsLeft = dailyCals;
-                              print("cals is $dailyCals");
-                              print("cals left is $calsLeft");
-                              print("weight is $weight");
-                              print("weight is $height");
-                              print("age is $age");
-                              print("gender is $_gender");
                             }
 
+                            // Increase calories by 15% for weight gain
                             if (goals > 0) {
                               dailyCals = dailyCals + dailyCals * 0.15;
                               calsLeft = dailyCals;
-                              print("cals is $dailyCals");
-                              print("cals left is $calsLeft");
                             }
+                            // Decrease calories by 15% for weight loss
                             if (goals < 0) {
                               dailyCals = dailyCals - (dailyCals * 0.15);
                               calsLeft = dailyCals;
-                              print("cals is $dailyCals");
-                              print("cals left is $calsLeft");
                             }
 
                             dailyCals = dailyCals.round();
                             calsLeft = calsLeft.round();
 
-                            //2.2 grams per kilo
+                            //2.2 grams of protein per kilo of bodyweight
                             dailyProtien = weight * 2.2;
                             dailyProtien = dailyProtien.round();
                             protienLeft = dailyProtien;
-                            print("Protien : $dailyProtien");
-                            print("Protien Left : $protienLeft");
 
-
-                            // 30% of total cals
+                            // 30% of total cals given to fats
                             dailyFat = weight * 0.88;
                             dailyFat= dailyFat.round();
                             fatLeft = dailyFat;
-                            print("Fat Left: $fatLeft");
-                            print("Fat : $dailyFat");
 
+                            //remaining calories in carbs
                             dailyCarbs = (dailyCals - ((dailyFat * 9)+(dailyProtien * 4)))/4;
                             dailyCarbs = dailyCarbs.round();
                             carbsLeft = dailyCarbs;
-                            print("Carbs Left : $carbsLeft");
-                            print("Carbs : $dailyCarbs");
-
                           });
 
                           if (_validate == false) {
@@ -387,6 +368,7 @@ class _RegisterState extends State<Register> {
                               DatabaseHelper.carbsLeft: '$carbsLeft',
                               DatabaseHelper.fatLeft: '$fatLeft'
                             });
+                            await DatabaseHelper.instance.setDefaultRoutines(i);
                             print('the inserted id is $i');
                             _validate = true;
                               Navigator.push(

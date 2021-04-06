@@ -9,8 +9,6 @@ import 'Register.dart';
 import 'database_helper.dart';
 
 class LoginPage extends StatefulWidget {
-
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -19,122 +17,141 @@ class _LoginPageState extends State<LoginPage> {
   static var username;
   static var password;
 
-
   final usernameCon = new TextEditingController();
   final passwordCon = new TextEditingController();
 
+  void newday(int uid) async {
+    //checking current date
+    final currentdate = new DateTime.now().day;
+    print("$currentdate");
+    //you need to import this Shared preferences plugin
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //getting last date
+    int lastDay = (prefs.getInt('day') ?? 0);
+
+    //check is code already display or not
+    if (currentdate != lastDay) {
+      await prefs.setInt('day', currentdate);
+      //your code will run once in day
+      //print("macros updated for a new day");
+      await DatabaseHelper.instance.updateMacros(uid);
+      await DatabaseHelper.instance.removeYesterdaysFood(uid);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 18.0),
-          children: <Widget>[
-            Column(children: <Widget>[
-              SizedBox(
-                height: 50,
-              ),
-              Image.asset(
-                'assets/logo.png',
-                width: 250,
-                height: 250,
-              ),
-            ]),
-            SizedBox(height: 60.0),
-            TextField(
-              decoration: InputDecoration(
-                labelText: "Name",
-                labelStyle: TextStyle(fontSize: 20),
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xff68D065)),
-                ),
-              ),
-              controller: usernameCon,
-            ),
-            SizedBox(height: 20.0),
-            TextField(
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: "Password",
-                labelStyle: TextStyle(fontSize: 20),
-                filled: true,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xff68D065)),
-                ),
-              ),
-              controller: passwordCon,
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Column(
-              children: <Widget>[
-                ButtonTheme(
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: Scaffold(
+        body: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 18.0),
+            children: <Widget>[
+              Column(children: <Widget>[
+                SizedBox(
                   height: 50,
-                  disabledColor: Color(0xff68D065),
-                  child: RaisedButton(
-                    disabledElevation: 4.0,
-                    onPressed: () async {
-                      setState(() {
-                        username = usernameCon.text;
-                        password = passwordCon.text;
-                      });
-                      int queryLogin = await DatabaseHelper.instance.checkLogin(username, password);
-                      int uid = await DatabaseHelper.instance.getUserID(username);
-                      int updated = await DatabaseHelper.instance.setDefaultRoutines(uid);
-                      print("Login page has $uid");
-
-                      if (queryLogin == 1) {
-                        var pref = await SharedPreferences.getInstance();
-                        pref.setInt('UID', uid);
-                        print("user id is $uid");
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) =>
-                                MyNavBar(uid)));
-                      }
-                      else
-                        wrongDetails(context);
-                    },
-                    child: Text('Login',
-                        style: TextStyle(fontSize: 20, color: Colors.white)),
+                ),
+                Image.asset(
+                  'assets/logo.png',
+                  width: 250,
+                  height: 250,
+                ),
+              ]),
+              SizedBox(height: 60.0),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "Name",
+                  labelStyle: TextStyle(fontSize: 20),
+                  filled: true,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xff68D065)),
                   ),
                 ),
-                SizedBox(
-                  height: 20,
+                controller: usernameCon,
+              ),
+              SizedBox(height: 20.0),
+              TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  labelStyle: TextStyle(fontSize: 20),
+                  filled: true,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xff68D065)),
+                  ),
                 ),
-                GestureDetector(
-                  child: Text(
-                    'New User? register here',
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      color: Color(0xff68D065),
+                controller: passwordCon,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Column(
+                children: <Widget>[
+                  ButtonTheme(
+                    height: 50,
+                    disabledColor: Color(0xff68D065),
+                    child: RaisedButton(
+                      disabledElevation: 4.0,
+                      onPressed: () async {
+                        setState(() {
+                          username = usernameCon.text;
+                          password = passwordCon.text;
+                        });
+                        int queryLogin = await DatabaseHelper.instance
+                            .checkLogin(username, password);
+                        int uid =
+                            await DatabaseHelper.instance.getUserID(username);
+                        print("Login page has $uid");
+                        newday(uid);
+
+                        if (queryLogin == 1) {
+                          var pref = await SharedPreferences.getInstance();
+                          pref.setInt('UID', uid);
+                          print("user id is $uid");
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MyNavBar(uid)));
+                        } else
+                          wrongDetails(context);
+                      },
+                      child: Text('Login',
+                          style: TextStyle(fontSize: 20, color: Colors.white)),
                     ),
                   ),
-                  onTap: (){
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => Register()));
-                  },
-                ),
-              ],
-            ),
-          ],
+                  SizedBox(
+                    height: 20,
+                  ),
+                  GestureDetector(
+                    child: Text(
+                      'New User? register here',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Color(0xff68D065),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => Register()));
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void wrongDetails(BuildContext context){
-
+  void wrongDetails(BuildContext context) {
     var alertDialog = AlertDialog(
       title: Text("This account does not exist"),
       content: Text("please enter correct details or register an account"),
     );
 
     showDialog(
-        context: context,
-        builder: (BuildContext context) => alertDialog
-    );
+        context: context, builder: (BuildContext context) => alertDialog);
   }
-
 }

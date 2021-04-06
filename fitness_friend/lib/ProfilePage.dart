@@ -23,7 +23,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   List<Exercise> allExercises;
-  List<Exercise> graphList;
+  static List<Exercise> graphList;
   var username;
   var userHeight;
   var userWeight;
@@ -35,10 +35,12 @@ class _ProfilePageState extends State<ProfilePage> {
     allExercises = await DatabaseHelper.instance.getExercises();
   }
 
-  getgraph() async {
+  static getgraph() async {
     graphList = await DatabaseHelper.instance.getGraphExercises();
   }
 
+  static Stream getstream() =>
+      Stream.periodic(Duration(seconds: 1)).asyncMap((_) => getgraph());
 
   getuserdetails() async {
     username = await DatabaseHelper.instance.getUserName(widget.uid);
@@ -84,13 +86,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
 
-    return new Scaffold(
+    return WillPopScope(
+        onWillPop: () => Future.value(false),
+    child: new Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       body: Stack(
         children: <Widget>[
           Positioned(
             top: 0,
-            height: height * 0.35,
+            height: height * 0.36,
             left: 0,
             right: 0,
             child: ClipRRect(
@@ -154,7 +158,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               SizedBox(
                                 height: 10,
                               ),
-                              Text("$userHeight",
+                              Text("$userHeight CM",
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w400,
@@ -176,7 +180,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 height: 10,
                               ),
                               Text(
-                                "$userWeight",
+                                "$userWeight KG",
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w400,
@@ -198,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               SizedBox(
                                 height: 10,
                               ),
-                              Text("$goals",
+                              Text("$goals KG",
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w400,
@@ -265,7 +269,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                graphList == null ?
+                graphList.length < 1 ?
                 Center(
                     heightFactor: 7.5,
                     child:Text("Empty, please add a Graph",
@@ -276,22 +280,26 @@ class _ProfilePageState extends State<ProfilePage> {
                   height: height * 0.4,
                   padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
                   width: double.infinity,
-                  child: GridView.builder(
-                    gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 2.5 / 2,
-                      crossAxisSpacing: width * 0.03,
-                      mainAxisSpacing: height * 0.02,
-                    ),
-//                    scrollDirection: Axis.vertical,
-//                  child: Wrap(
-//                    runSpacing: height * 0.02,
-//                    spacing: width * 0.03,
-                    itemBuilder: (BuildContext context, int index) {
-                      Exercise exercise = graphList[index];
-                      return InfoCard(exercise.exerciseName, exercise.exerciseID, widget.uid);
-                    },
-                    itemCount: graphList.length,
+                  child: StreamBuilder(
+                    stream: getstream(),
+                     builder: (context, snapshot) {
+
+                       return GridView.builder(
+                         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                           crossAxisCount: 2,
+                           childAspectRatio: 2.5 / 2,
+                           crossAxisSpacing: width * 0.03,
+                           mainAxisSpacing: height * 0.02,
+                         ),
+                         itemBuilder: (BuildContext context, int index) {
+                           Exercise exercise = graphList[index];
+                           return InfoCard(
+                               exercise.exerciseName, exercise.exerciseID,
+                               widget.uid);
+                         },
+                         itemCount: graphList.length,
+                       );
+                     }
                   ),
                 ),
               ],
@@ -302,8 +310,10 @@ class _ProfilePageState extends State<ProfilePage> {
             width: MediaQuery.of(context).size.width,
             child: Center(
               child: MaterialButton(
-                onPressed: () {
-                  Navigator.push(context,
+                onPressed: () async{
+                  await DatabaseHelper.instance.resetGraphs();
+
+                  Navigator.pop(context,
                       MaterialPageRoute(builder: (context) => LoginPage()));
                 },
                 shape: RoundedRectangleBorder(
@@ -319,6 +329,7 @@ class _ProfilePageState extends State<ProfilePage> {
           )
         ],
       ),
+    ),
     );
   }
 }

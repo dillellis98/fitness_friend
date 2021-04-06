@@ -37,7 +37,14 @@ class _FoodListState extends State<FoodList> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(food.name),
-        content: Text("ID ${widget.uid}"),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text("C: ${food.carbohydrates}g"),
+            Text("P: ${food.protiens}g"),
+            Text("F: ${food.carbohydrates}g"),
+          ],
+        ),
         actions: <Widget>[
           FlatButton(
             onPressed: () => Navigator.pushReplacement(

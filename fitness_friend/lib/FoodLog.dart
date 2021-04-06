@@ -1,5 +1,4 @@
 import 'package:barcode_scan/barcode_scan.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:fitnessfriend/Events/add_food.dart';
 import 'package:fitnessfriend/foodForm.dart';
 import 'package:fitnessfriend/foodList.dart';
@@ -62,7 +61,14 @@ class _FoodLogState extends State<FoodLog> {
     userProteinLeft = await DatabaseHelper.instance.getProtienLeft(widget.uid);
     userFat = await DatabaseHelper.instance.getUserFat(widget.uid);
     userFatLeft = await DatabaseHelper.instance.getFatLeft(widget.uid);
+    calProgress = (userCalsLeft / userCals);
+    protienProgress = (userProteinLeft / userProtein);
+    carbsProgress = (userCarbsLeft / userCarbs);
+    fatProgress = (userFatLeft / userFat);
   }
+
+  Stream macroStream() =>
+      Stream.periodic(Duration(seconds: 1)).asyncMap((_) => getNutrients());
 
   Future _scanBarcode() async {
     try {
@@ -108,8 +114,6 @@ class _FoodLogState extends State<FoodLog> {
       foodFat = result.product.nutriments.fatServing;
       foodCarbs = result.product.nutriments.carbohydratesServing;
       servingSize = result.product.servingQuantity;
-      print(
-          "$foodName , $foodCals , $foodProtien , $foodFat , $foodCarbs , $servingSize");
 
       return result.product;
     } else {
@@ -182,19 +186,7 @@ class _FoodLogState extends State<FoodLog> {
   @override
   void initState() {
     super.initState();
-    asyncMethod().then((result) {
-      calProgress = (userCalsLeft / userCals);
-      protienProgress = (userProteinLeft / userProtein);
-      carbsProgress = (userCarbsLeft / userCarbs);
-      fatProgress = (userFatLeft / userFat);
-      setState(() {
-        isLoading = false;
-    });
-    });
-  }
 
-  asyncMethod() async {
-    await getNutrients();
   }
 
   Widget build(BuildContext context) {
@@ -202,194 +194,177 @@ class _FoodLogState extends State<FoodLog> {
     final width = MediaQuery.of(context).size.width;
     final today = DateTime.now();
 
-    if (isLoading == true) {
-      return Scaffold(
-          backgroundColor: Color(0xFFE9E9E9),
-          body: Center(
-            child: Image.asset(
-              'assets/logo.png',
-              width: height * 0.3,
-              height: height * 0.3,
-            ),
-          ));
-    }
 
-    return Scaffold(
-      backgroundColor: Color(0xFFE9E9E9),
-      body: Stack(
-        children: <Widget>[
-          Positioned(
-            top: 0,
-            height: height * 0.35,
-            left: 0,
-            right: 0,
-            child: ClipRRect(
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(40),
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: Scaffold(
+        backgroundColor: Color(0xFFE9E9E9),
+        body: Stack(
+          children: <Widget>[
+            Positioned(
+              top: 0,
+              height: height * 0.36,
+              left: 0,
+              right: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(40),
+                ),
+                child: Container(
+                  color: Colors.white,
+                  padding:
+                      EdgeInsets.only(top: 30, left: 32, right: 16, bottom: 10),
+                  child: StreamBuilder(
+                    stream: macroStream(),
+                    builder: (context, snapshot) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          ListTile(
+                            title: Text(
+                              "${DateFormat("EEEE").format(today)}, ${DateFormat("d MMMM").format(today)}",
+                              style: TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              _RadialProgress(
+                                width: width * 0.3,
+                                height: width * 0.3,
+                                progress: calProgress,
+                                kcal: userCalsLeft,
+                              ),
+                              SizedBox(
+                                width: 15,
+                              ),
+                              Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  _MacroProgress(
+                                      macro: "Protein",
+                                      progress: protienProgress,
+                                      progressColor: Color(0xff68D065),
+                                      amountLeft: userProteinLeft,
+                                      width: width * 0.3),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  _MacroProgress(
+                                      macro: "Carbohydrates",
+                                      progress: carbsProgress,
+                                      progressColor: Color(0xff68D065),
+                                      amountLeft: userCarbsLeft,
+                                      width: width * 0.3),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  _MacroProgress(
+                                      macro: "Fat",
+                                      progress: fatProgress,
+                                      progressColor: Color(0xff68D065),
+                                      amountLeft: userFatLeft,
+                                      width: width * 0.3),
+                                ],
+                              )
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
+            ),
+            Positioned(
+              top: height * 0.38,
+              left: 0,
+              right: 0,
               child: Container(
-                color: Colors.white,
-                padding:
-                    EdgeInsets.only(top: 30, left: 32, right: 16, bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                height: height,
+                child: Row(
                   children: <Widget>[
-                    ListTile(
-                      title: Text(
-                        "${DateFormat("EEEE").format(today)}, ${DateFormat("d MMMM").format(today)}",
-                        style: TextStyle(
-                          fontSize: 14,
-                        ),
-                      ),
-                      subtitle: Text(
-                        "Hello, User",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
+                    Flexible(
+                      flex: 9,
+                      fit: FlexFit.loose,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 8,
+                              left: 32,
+                              right: 16,
+                            ),
+                            child: Text(
+                              "Food Eaten",
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          FoodList(widget.uid),
+                        ],
                       ),
                     ),
-                    SizedBox(
-                      height: 20,
+                    Flexible(
+                      flex: 1,
+                      fit: FlexFit.tight,
+                      child: SizedBox(),
                     ),
-                    Row(
-                      children: <Widget>[
-                        _RadialProgress(
-                          width: width * 0.3,
-                          height: width * 0.3,
-                          progress: calProgress,
-                          kcal: userCalsLeft,
-                        ),
-                        SizedBox(
-                          width: 15,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            _MacroProgress(
-                                macro: "Protien",
-                                progress: protienProgress,
-                                progressColor: Color(0xff68D065),
-                                amountLeft: userProteinLeft,
-                                width: width * 0.3),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            _MacroProgress(
-                                macro: "Carbs",
-                                progress: carbsProgress,
-                                progressColor: Color(0xff68D065),
-                                amountLeft: userCarbsLeft,
-                                width: width * 0.3),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            _MacroProgress(
-                                macro: "Fat",
-                                progress: fatProgress,
-                                progressColor: Color(0xff68D065),
-                                amountLeft: userFatLeft,
-                                width: width * 0.3),
-                          ],
-                        )
-                      ],
+                    Flexible(
+                      flex: 1,
+                      fit: FlexFit.tight,
+                      child: Column(
+                        children: <Widget>[
+                          SizedBox(
+                            height: height * 0.04,
+                          ),
+                          IconButton(
+                              color: Color(0xff68D065),
+                              icon: Icon(FontAwesomeIcons.camera),
+                              onPressed: () {
+                                _scanBarcode().then((value) =>
+                                    getProduct(barcodeResult).then((value) {
+                                      ConfirmFoodDialog();
+                                    }));
+                              }),
+                          SizedBox(
+                            height: height * 0.04,
+                          ),
+                          IconButton(
+                              color: Color(0xff68D065),
+                              icon: Icon(FontAwesomeIcons.plus),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (BuildContext context) =>
+                                            FoodForm()));
+                              }),
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      flex: 1,
+                      fit: FlexFit.tight,
+                      child: SizedBox(),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: height * 0.38,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: height,
-              child: Row(
-                children: <Widget>[
-                  Flexible(
-                    flex: 9,
-                    fit: FlexFit.loose,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 8,
-                            left: 32,
-                            right: 16,
-                          ),
-                          child: Text(
-                            "Food Eaten",
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        FoodList(widget.uid),
-                      ],
-                    ),
-                  ),
-                  Flexible(
-                    flex: 1,
-                    fit: FlexFit.tight,
-                    child: SizedBox(),
-                  ),
-                  Flexible(
-                    flex: 1,
-                    fit: FlexFit.tight,
-                    child: Column(
-                      children: <Widget>[
-                        SizedBox(
-                          height: height * 0.04,
-                        ),
-                        IconButton(
-                            color: Color(0xff68D065),
-                            icon: Icon(Icons.search),
-                            onPressed: () {}),
-                        SizedBox(
-                          height: height * 0.04,
-                        ),
-                        IconButton(
-                            color: Color(0xff68D065),
-                            icon: Icon(FontAwesomeIcons.camera),
-                            onPressed: () {
-                              _scanBarcode().then((value) =>
-                                  getProduct(barcodeResult).then((value) {
-                                    ConfirmFoodDialog();
-                                  }));
-                            }),
-                        SizedBox(
-                          height: height * 0.04,
-                        ),
-                        IconButton(
-                            color: Color(0xff68D065),
-                            icon: Icon(FontAwesomeIcons.plus),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          FoodForm()));
-                            }),
-                      ],
-                    ),
-                  ),
-                  Flexible(
-                    flex: 1,
-                    fit: FlexFit.tight,
-                    child: SizedBox(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -467,6 +442,7 @@ class _RadialProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
+      // painter displays progress in a radial painter
       painter: _RadialPainter(progress: progress),
       child: Container(
         height: height,
@@ -476,6 +452,7 @@ class _RadialProgress extends StatelessWidget {
             textAlign: TextAlign.center,
             text: TextSpan(
               children: [
+                //displays number of calories
                 TextSpan(
                   text: "$kcal",
                   style: TextStyle(
@@ -516,8 +493,11 @@ class _RadialPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     Offset center = Offset(size.width / 2, size.height / 2);
+    // relative progress determines how much of the 360 degrees of the
+    // circle should be shown in relation to progress.
     double relativeProgress = 360 * progress;
 
+    //draws the arc
     canvas.drawArc(Rect.fromCircle(center: center, radius: size.width / 2),
         math.radians(-90), math.radians(-relativeProgress), false, paint);
     //canvas.drawCircle(center, size.width/2, paint);

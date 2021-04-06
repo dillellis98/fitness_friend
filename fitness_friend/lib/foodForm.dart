@@ -162,7 +162,7 @@ class FoodFormState extends State<FoodForm> {
               widget.food == null
                   ? RaisedButton(
                 child: Text(
-                  'update',
+                  'Add',
                   style: TextStyle(color: Colors.blue, fontSize: 16),
                 ),
                 onPressed: () {
@@ -244,3 +244,4 @@ class FoodFormState extends State<FoodForm> {
     );
   }
 }
+

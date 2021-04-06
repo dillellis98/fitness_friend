@@ -37,24 +37,15 @@ class _ExercisePickerState extends State<ExercisePicker> {
   bool isLoading = true;
   String searchtext = '';
 
-//  getExerciseList() async {
-//    allExercises = await DatabaseHelper.instance.getExercises();
-//  }
 
   @override
   void initState() {
     super.initState();
     getCurrentUID('UID').then((value) => UID = value);
-//    asyncMethod().then((result) {
-//        setState(() {
-//          isLoading = false;
-//        });
-//      });
+
   }
 
-//  asyncMethod() async {
-//    await getExerciseList();
-//  }
+
 
   bool containsSearchText(Exercise exercise) {
     final name = exercise.exerciseName;
@@ -116,26 +107,31 @@ class _ExercisePickerState extends State<ExercisePicker> {
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                   onPressed: () {
-                    Routine routine = Routine(
-                      routineName: widget.routineName,
-                      description: widget.routineDesc,
-                      imagePath: "assets/gymthings.png",
-                      isDefault: 0,
-                      userFK: UID,
-                    );
-                    DatabaseHelper.instance
-                        .routineInsert(routine)
-                        .then((value) => selectedExercises.forEach((element) {
-                              RoutineExercise routineExercise = RoutineExercise(
-                                  routineFK: value,
-                                  exerciseFK: element.exerciseID);
+                    if (selectedExercises.length > 1) {
+                      Routine routine = Routine(
+                        routineName: widget.routineName,
+                        description: widget.routineDesc,
+                        imagePath: "assets/gymthings.png",
+                        isDefault: 0,
+                        userFK: UID,
+                      );
+                      DatabaseHelper.instance
+                          .routineInsert(routine)
+                          .then((value) =>
+                          selectedExercises.forEach((element) {
+                            RoutineExercise routineExercise = RoutineExercise(
+                                routineFK: value,
+                                exerciseFK: element.exerciseID);
 
-                              DatabaseHelper.instance
-                                  .linkTableInsert(routineExercise);
-                            }));
+                            DatabaseHelper.instance
+                                .linkTableInsert(routineExercise);
+                          }));
 
-                    int count = 0;
-                    Navigator.of(context).popUntil((_) => count++ >= 2);
+                      int count = 0;
+                      Navigator.of(context).popUntil((_) => count++ >= 2);
+                    }
+                    else
+                      moreExercise(context);
                   },
                 ),
               ),
@@ -155,5 +151,18 @@ class _ExercisePickerState extends State<ExercisePicker> {
       var result = await DatabaseHelper.instance.setgraphed(exercise.exerciseID);
       Navigator.pop(context, exercise);
     }
+  }
+
+  void moreExercise(BuildContext context){
+
+    var alertDialog = AlertDialog(
+      title: Text("Not enough Exercises"),
+      content: Text("please select at least 1 exercise"),
+    );
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => alertDialog
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:fitnessfriend/database_helper.dart';
+import 'package:fitnessfriend/fieldValidator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,16 +61,7 @@ class editFoodFormState extends State<editFoodForm> {
       decoration: InputDecoration(labelText: 'Name'),
       maxLength: 15,
       style: TextStyle(fontSize: 28),
-      validator: (String value) {
-        if (value.isEmpty) {
-          return 'Name is Required';
-        }
-
-        return null;
-      },
-      onSaved: (String value) {
-        _name = value;
-      },
+      validator: fieldValidator.validateName,
     );
   }
 
@@ -79,15 +71,7 @@ class editFoodFormState extends State<editFoodForm> {
       decoration: InputDecoration(labelText: 'Calories'),
       keyboardType: TextInputType.number,
       style: TextStyle(fontSize: 28),
-      validator: (String value) {
-        int calories = int.tryParse(value);
-
-        if (calories == null || calories <= 0) {
-          return 'Calories must be greater than 0';
-        }
-
-        return null;
-      },
+      validator: fieldValidator.validateCalories,
       onSaved: (String value) {
         _calories = value;
       },

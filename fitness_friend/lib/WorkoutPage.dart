@@ -25,7 +25,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
   bool isLoading = true;
 
   getRoutineLists() async {
-    defaultRoutineList = await DatabaseHelper.instance.getDefaultRoutine();
+    defaultRoutineList = await DatabaseHelper.instance.getDefaultRoutine(widget.uid);
     myRoutineList = await DatabaseHelper.instance.getMyRoutine(widget.uid);
   }
 
@@ -61,7 +61,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
           ));
     }
 
-    return new Scaffold(
+    return WillPopScope(
+        onWillPop: () => Future.value(false),
+    child: new Scaffold(
       backgroundColor: Color(0xFFE9E9E9),
       body: Stack(
         children: <Widget>[
@@ -238,6 +240,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -291,8 +294,11 @@ class _routineCard extends StatelessWidget {
                           //SizedBox(height: 10),
                           Text(
                             routine.routineName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                             style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
+                                fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                           SizedBox(height: 10),
                           Text(routine.description),

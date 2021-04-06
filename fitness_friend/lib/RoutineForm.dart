@@ -1,4 +1,5 @@
 import 'package:fitnessfriend/database_helper.dart';
+import 'package:fitnessfriend/fieldValidator.dart';
 import 'package:flutter/material.dart';
 
 import 'ExercisePicker.dart';
@@ -86,7 +87,7 @@ class _RoutineFormState extends State<RoutineForm> {
             height: 50,
             disabledColor: Color(0xff68D065),
               child: RaisedButton(
-                child: Text('Login',
+                child: Text('Confirm',
                     style: TextStyle(fontSize: 20, color: Colors.white)),
                 onPressed: () async{
                   _routineFormKey.currentState.save();

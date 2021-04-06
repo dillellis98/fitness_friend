@@ -26,6 +26,8 @@ class _TrackWorkoutState extends State<TrackWorkout> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
+
+    //Create a list of exercise logs containing all the exercises in the routine
     List<Widget> _exercises = new List.generate(
         widget.chosenExercises.length,
         (int i) =>
@@ -40,6 +42,7 @@ class _TrackWorkoutState extends State<TrackWorkout> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               SizedBox(height: 20),
+              //Display the list of exercises
               Container(
                 child: ListView(
                   physics: const NeverScrollableScrollPhysics(),
@@ -60,12 +63,6 @@ class _TrackWorkoutState extends State<TrackWorkout> {
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                   onPressed: () async {
-                    print("${exerciseLog.first.reps}");
-                    print("${exerciseLog.first.weight}");
-                    print("${exerciseLog.first.routineFK}");
-                    print("${exerciseLog.first.exerciseFK}");
-                    print("${exerciseLog.first.logdate}");
-
                     exerciseLog.forEach((element) {
                       DatabaseHelper.instance.logInsert(element);
                     });
@@ -106,6 +103,8 @@ class _logExerciseState extends State<_logExercise> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
+    // inside the individual exercises create a list of log rows to display
+    // each set of the exercise.
     List<Widget> _logs = new List.generate(_count,
         (int j) => new LogRow(j, widget.i, widget.RID, widget.exercise));
 
@@ -145,6 +144,7 @@ class _logExerciseState extends State<_logExercise> {
             ],
           ),
           Container(
+            //display the list of all sets of each exercise, within the list of exercises
             child: ListView(
               physics: const NeverScrollableScrollPhysics(),
               children: _logs,
@@ -156,6 +156,7 @@ class _logExerciseState extends State<_logExercise> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                //Adds a new set to the exercise
                 SizedBox(
                   width: width * 0.3,
                   child: ElevatedButton(
@@ -168,6 +169,7 @@ class _logExerciseState extends State<_logExercise> {
                     onPressed: _addNewLogRow,
                   ),
                 ),
+                //Removes a set from the exercise, cannot go below three sets
                 if (_count > 3)
                   SizedBox(
                     width: width * 0.3,
@@ -244,13 +246,14 @@ class _LogRowState extends State<LogRow> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(
-              width: 50,
+              width: 60,
               height: 25,
               child: TextFormField(
+                textAlign: TextAlign.center,
                 decoration: new InputDecoration(
                   fillColor: Colors.white,
                   enabledBorder: new OutlineInputBorder(
-                    borderRadius: new BorderRadius.circular(25.0),
+                    borderRadius: new BorderRadius.circular(20.0),
                     borderSide: new BorderSide(
                       color: Color(0xff68D065),
                     ),
@@ -262,7 +265,7 @@ class _LogRowState extends State<LogRow> {
               ),
             ),
             SizedBox(
-              width: 50,
+              width: 60,
               height: 25,
               child: TextFormField(
                 decoration: new InputDecoration(
@@ -279,11 +282,14 @@ class _LogRowState extends State<LogRow> {
                   },
               ),
             ),
+
             Checkbox(
+              //check if exercise and log combination is in checked list
               value: checkLog.contains(Tuple2(widget.i, widget.j)),
               onChanged: (bool value) {
                 print(value);
                 setState(() {
+                  // If it is not in the list, add it to the list and save the sets values
                   if (value) {
                     checkLog.add(Tuple2(widget.i, widget.j));
 
@@ -304,6 +310,7 @@ class _LogRowState extends State<LogRow> {
 
 
                   } else {
+                    // if it is in the list remove it and get rid of the saved values
                     checkLog.remove(Tuple2(widget.i, widget.j));
                     var trackNum = "${widget.i}${widget.j}";
                     exerciseLog.removeWhere((element) => element.trackingNum == trackNum);

@@ -4,51 +4,57 @@ import 'package:flutter/material.dart';
 import 'model/GraphData.dart';
 
 class GraphLog extends StatefulWidget {
-  final List<GraphData> datalist;
+  final List<GraphData> cleanedData;
 
-  GraphLog(this.datalist);
+  GraphLog(this.cleanedData);
 
   @override
   _GraphLogState createState() => _GraphLogState();
 }
 
-
 class _GraphLogState extends State<GraphLog> {
+  List<DataPoint> makeDataPoints() {
+    List<DataPoint> dataPointList = [];
+    for (int i = 0; i < widget.cleanedData.length; i++) {
+      //print("DATA HERE : ${widget.cleanedData[i].weight} + ${widget.cleanedData[i].logtime}");
+      dataPointList.add(DataPoint<DateTime>(
+          value: widget.cleanedData[i].weight.toDouble(),
+          xAxis: DateTime.parse(widget.cleanedData[i].logtime)));
+    }
+
+    return dataPointList;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final fromDate = DateTime(2021, 03, 01);
+    final fromDate =DateTime.now().subtract(Duration(days: 30));
     final toDate = DateTime.now();
-
-    final date1 = DateTime.now().subtract(Duration(days: 2));
-    final date2 = DateTime.now().subtract(Duration(days: 3));
 
     return Center(
       child: Container(
-        color: Colors.red,
+        color: Color(0xff68D065),
         height: MediaQuery.of(context).size.height / 2,
         width: MediaQuery.of(context).size.width,
         child: BezierChart(
           fromDate: fromDate,
           bezierChartScale: BezierChartScale.WEEKLY,
-          toDate: toDate,
+          toDate: toDate.add(Duration(days: 1)),
           selectedDate: toDate,
           series: [
             BezierLine(
-              label: "Duty",
-              data: [
-                DataPoint<DateTime>(value: 10, xAxis: DateTime(2021,03,14)),
-                DataPoint<DateTime>(value: 50, xAxis: date2),
-              ],
+              label: "KG",
+              data: makeDataPoints(),
             ),
           ],
           config: BezierChartConfig(
+            displayDataPointWhenNoValue: false,
             verticalIndicatorStrokeWidth: 3.0,
             verticalIndicatorColor: Colors.black26,
             showVerticalIndicator: true,
             verticalIndicatorFixedPosition: false,
-            backgroundColor: Colors.red,
+            backgroundColor: Color(0xff68D065),
             footerHeight: 30.0,
+            showDataPoints: true,
           ),
         ),
       ),
