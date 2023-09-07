@@ -1,16 +1,10 @@
 # fitnessfriend
 
-A new Flutter application.
+Fitness Friend is a fitness tracker app to help users efficiently track their diet and calorie intake as well as tracking their work out routines and progress. The app will teach users the importance of healthy habits by allowing them to clearly visualize their progression over time. 
+The app takes the users physical attributes and values such as weight, height, gender, age, daily activity, and their weight goal (gain, loss or maintaining weight). Using these values, the app can calculate the daily calorific intake needed for the individual to reach their goals. This creates an accurate and personal route for everyone’s fitness journey. This makes Fitness Friend beneficial to any user regardless of what goals they are trying to achieve.
+Since the app aims to let users track their calorie intake in real time there always needs to be the information needed available. The app will give users the ability to search for the food they have eaten from a huge database of products, for efficiency the app will also allow the user to search the products by barcode by simply scanning the foods barcode with their phones camera. Each time a food has been selected its calories and macro-nutrients (fats, proteins, and carbohydrates) will be taken from the users’ daily total.
+The routine tracking feature of the app gives users a collection of pre-set routines to choose from as well as giving them a selection of workouts to combine into their own unique routines. As the routines are completed users enter the data from their workout, this data is stored and used to compare to previous workouts. The data collected from the two main features is used to visualize the data in various charts and graphs. This is essential in giving the user a clear and easy way to identify any areas that need improvement or to visual their progress and use it as motivation to continue towards their goals.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Fitness Friend is a Flutter app written in Dart.
+The backend is an SQLite database.
+It uses the Openfoodfacts API to get nutritional data and to scan product barcodes.
